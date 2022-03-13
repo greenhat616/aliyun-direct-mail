@@ -1,26 +1,30 @@
 {
-    "name": "hyancat/aliyun-direct-mail",
+    "name": "greenhat616/laravel-directmail",
     "description": "阿里云邮件推送 for Laravel.",
     "license": "MIT",
     "authors": [
         {
-            "name": "HyanCat",
-            "email": "hyancat@live.cn"
+            "name": "a632079",
+            "email": "i@a632079.me"
         }
     ],
     "require": {
-        "php": ">=7.0",
-        "illuminate/support": "^5.0|^6.0|^7.0|^8.0"
+        "php": "^8.0|^8.1",
+        "ext-json": "*",
+        "illuminate/support": "^9.0",
+        "symfony/mailer": "^6.0",
+        "alibabacloud/dm-20151123": "^1.0",
+        "illuminate/mail": "^9.3"
     },
     "autoload": {
         "psr-4": {
-            "HyanCat\\DirectMail\\": "src/"
+            "Greenhat616\\LaravelDirectMail\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "HyanCat\\DirectMail\\AliyunDirectMailServiceProvider"
+                "Greenhat616\\LaravelDirectMail\\DirectMailServiceProvider"
             ]
         }
     }
