@@ -20,10 +20,12 @@ class DirectMailServiceProvider extends ServiceProvider
             ]);
             $profile->endpoint = 'dm.aliyuncs.com';
             $client = new DM($profile); // 初始化 DirectMail 实例
-
+            $replyTo = Arr::get($config, 'reply_to');
             return new DirectMailTransport(
                 $client,
                 Arr::get($config, 'account_name'),
+                is_bool($replyTo) ? $replyTo : filter_var((string)$replyTo, FILTER_VALIDATE_BOOL),
+                Arr::get($config, 'from_alias')
             );
         });
     }

@@ -4,58 +4,65 @@ namespace Greenhat616\LaravelDirectMail;
 
 use AlibabaCloud\SDK\Dm\V20151123\Dm as DM;
 use AlibabaCloud\SDK\Dm\V20151123\Models\SingleSendMailRequest;
-use AlibabaCloud\Tea\Utils\Utils;
-use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\SentMessage;
-use Symfony\Component\Mailer\Transport\TransportInterface;
-use Symfony\Component\Mime\RawMessage;
-
+use Symfony\Component\Mailer\Transport\AbstractTransport;
+use Symfony\Component\Mime\MessageConverter;
 
 /**
  * @link API Reference: https://help.aliyun.com/document_detail/29444.html
  * @link PHPSDK: https://github.com/alibabacloud-sdk-php/dm-20151123
  */
-class DirectMailTransport implements TransportInterface
+class DirectMailTransport implements AbstractTransport
 {
+    /**
+     * 阿里云 SDK 客户端
+     * @var AlibabaCloud\SDK\Dm\V20151123\Dm
+     */
     protected DM $client;
+    /**
+     * 邮箱账户
+     * @var string
+     */
     protected string $accountName;
-    protected string $replyTo;
-    protected string $replyToAlias;
+    /**
+     * 是否启用 ReplyTo 指定邮箱，需要在 阿里云控制台配置
+     * @var bool
+     */
+    protected bool $replyTo;
+    /**
+     * 邮箱别名（昵称）
+     * @var string
+     */
+    protected string $accountAlias;
 
-
-    public function __construct(DM $client, string $accountName, string $replyTo, string $replyToAlias)
+    public function __construct(DM $client, string $accountName, bool $replyTo, string $accountAlias)
     {
         $this->client = $client;
         $this->accountName = $accountName;
+        $this->accountAlias = $accountAlias;
         $this->replyTo = $replyTo;
-        $this->replyToAlias = $replyToAlias;
     }
 
     /**
-     * @param RawMessage $message
-     * @param Envelope|null $envelope
-     * @return SentMessage|null
+     * {@inheritDoc}
      */
-    public function send(RawMessage $message, Envelope $envelope = null): ?SentMessage
+    protected function doSend(SentMessage $message): void
     {
-        ['email' => $fromEmail, 'name' => $fromName] = $this->getFrom($message);
-        ['email' => $replyToEmail, 'name' => $replyToName] = $this->getReplyTo($message);
+        $email = MessageConverter::toEmail($message->getOriginalMessage());
+        // 获得发信文本
+        $text = $email->getTextBody();
+        $html = $email->getHtmlBody();
 
-        $text = $message->getTextBody();
-        $html = $message->getHtmlBody();
-
-        $to = $this->getToRecipients();
-        // 由于阿里云邮件推送 API 不支持 CC、BCC，因此不做处理
-        $subject = $message->getSubject();
-
-        // 由于阿里云邮件推送 API 不支持附件，因此附件不做处理.
+        // 发信配置
         $profile = [
             'accountName' => $this->accountName,
             'addressType' => 1, // 0 随机地址，1 发信地址
-            'FromAlias' => $fromName,
-            'toAddress' => implode(',', array_column($to, 'email')),
-            'subject' => $subject,
-            'ReplyToAddress' => $replyToEmail ? 'true' : 'false',
+            'FromAlias' => $this->accountAlias,
+            'toAddress' => collect($email->getTo())->map(function ($email) {
+                return  $email->getAddress();
+            })->implode(','),
+            'subject' => $email->getSubject(),
+            'ReplyToAddress' => $this->replyTo ? 'true' : 'false',
         ];
         if ($html) {
             $profile['HtmlBody'] = $html;
@@ -69,87 +76,8 @@ class DirectMailTransport implements TransportInterface
         // return new SentMessage($message, $envelope)
     }
 
-    protected function getFrom(RawMessage $message): array
-    {
-        $from = $message->getFrom();
-
-        if (count($from) > 0) {
-            return ['name' => $from[0]->getName(), 'email' => $from[0]->getAddress()];
-        }
-
-        return ['email' => '', 'name' => ''];
-    }
-
-    protected function getReplyTo(RawMessage $message): array
-    {
-        $from = $message->getReplyTo();
-
-        if (count($from) > 0) {
-            return ['name' => $from[0]->getName(), 'email' => $from[0]->getAddress()];
-        }
-
-        return ['email' => '', 'name' => ''];
-    }
-
-    protected function getToRecipients(RawMessage $message): array
-    {
-        $recipients = [];
-        if ($addresses = $message->getTo()) {
-            foreach ($addresses as $address) {
-                $recipients[] = [
-                    'address' => $address->getAddress(),
-                    'name' => $address->getName()
-                ];
-            }
-        }
-    }
-
     public function __toString(): string
     {
         return 'directmail';
     }
-
-    protected function getRecipients(string $type, RawMessage $message): array
-    {
-        $recipients = [];
-
-        if ($addresses = $message->{'get' . ucfirst($type)}()) {
-            foreach ($addresses as $address) {
-                $recipients[] = [
-                    'address' => $address->getAddress(),
-                    'name' => $address->getName()
-                ];
-            }
-        }
-
-        return $recipients;
-    }
-
-
-    /*
-    protected function sendSingle(\Swift_Mime_SimpleMessage $message)
-    {
-        $request = new DM\SingleSendMailRequest();
-
-        $request->setAccountName($this->accountName);    //控制台创建的发信地址
-        $request->setFromAlias($this->accountAlias);
-        $request->setAddressType(1);
-        $request->setReplyToAddress('true');
-
-        $request->setToAddress($this->getToAddress($message));
-        $request->setSubject($message->getSubject());
-        $request->setHtmlBody($message->getBody());
-        // dd($message->getBody());
-
-        $this->createClient()->getAcsResponse($request);
-
-        return 1;
-    }
-
-    // 多个地址使用逗号分隔
-    protected function getToAddress(\Swift_Mime_SimpleMessage $message)
-    {
-        return implode(',', array_keys($message->getTo()));
-    }
-    */
 }
