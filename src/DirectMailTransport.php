@@ -12,7 +12,7 @@ use Symfony\Component\Mime\MessageConverter;
  * @link API Reference: https://help.aliyun.com/document_detail/29444.html
  * @link PHPSDK: https://github.com/alibabacloud-sdk-php/dm-20151123
  */
-class DirectMailTransport implements AbstractTransport
+class DirectMailTransport extends AbstractTransport
 {
     /**
      * 阿里云 SDK 客户端
