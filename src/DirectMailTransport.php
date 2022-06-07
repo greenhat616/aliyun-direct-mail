@@ -37,6 +37,7 @@ class DirectMailTransport extends AbstractTransport
 
     public function __construct(DM $client, string $accountName, bool $replyTo, string $accountAlias)
     {
+        parent::__construct(); // 调用父类构造函数
         $this->client = $client;
         $this->accountName = $accountName;
         $this->accountAlias = $accountAlias;

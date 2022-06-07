@@ -23,7 +23,13 @@ class DirectMailServiceProvider extends ServiceProvider
             return new DirectMailTransport(
                 $client,
                 Arr::get($config, 'account_name'),
-                is_bool($replyTo) ? $replyTo : filter_var((string)$replyTo, FILTER_VALIDATE_BOOL),
+                is_null($replyTo) ? 
+                    false : (
+                        is_bool($replyTo) ? 
+                            $replyTo : 
+                            filter_var((string)$replyTo, FILTER_VALIDATE_BOOL
+                        )
+                    ),
                 Arr::get($config, 'from_alias')
             );
         });
@@ -31,6 +37,6 @@ class DirectMailServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/directmail.php', 'directmail');
+        $this->mergeConfigFrom(__DIR__ . '/../config/directmail.php', 'mail.mailer.directmail');
     }
 }
