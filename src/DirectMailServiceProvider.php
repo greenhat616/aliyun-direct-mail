@@ -14,8 +14,8 @@ class DirectMailServiceProvider extends ServiceProvider
     {
         Mail::extend('directmail', function (array $config = []) {
             $profile = new Config([
-                "accessKeyId" => Arr::get($config, 'access_secret_id'),
-                "accessKeySecret" => Arr::get($config, 'access_secret_key'),
+                "accessKeyId" => Arr::get($config, 'access_key_id'),
+                "accessKeySecret" => Arr::get($config, 'access_key_secret'),
             ]);
             $profile->endpoint = 'dm.aliyuncs.com';
             $client = new DM($profile); // 初始化 DirectMail 实例
