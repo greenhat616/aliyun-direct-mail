@@ -13,7 +13,6 @@ class DirectMailServiceProvider extends ServiceProvider
     public function boot()
     {
         Mail::extend('directmail', function (array $config = []) {
-            $config = Arr::get($config, 'directmail', []);
             $profile = new Config([
                 "accessKeyId" => Arr::get($config, 'access_key_id'),
                 "accessKeySecret" => Arr::get($config, 'access_key_secret'),
