@@ -41,7 +41,7 @@ class DirectMailTransport extends AbstractTransport
         $this->client = $client;
         $this->accountName = $accountName;
         $this->accountAlias = $accountAlias;
-        $this->replyTo = $replyTo;
+        $this->replyTo = $replyTo ?? false;
     }
 
     /**
@@ -58,19 +58,19 @@ class DirectMailTransport extends AbstractTransport
         $profile = [
             'accountName' => $this->accountName,
             'addressType' => 1, // 0 随机地址，1 发信地址
-            'FromAlias' => $this->accountAlias,
+            'fromAlias' => $this->accountAlias,
             'toAddress' => collect($email->getTo())->map(function ($email) {
                 return  $email->getAddress();
             })->implode(','),
             'subject' => $email->getSubject(),
-            'ReplyToAddress' => $this->replyTo ? 'true' : 'false',
+            'replyToAddress' => $this->replyTo ? 'true' : 'false',
         ];
         if ($html) {
-            $profile['HtmlBody'] = $html;
+            $profile['htmlBody'] = $html;
         } else if ($text) {
-            $profile['TextBody'] = $text;
+            $profile['textBody'] = $text;
         } else {
-            $profile['TextBody'] = '';
+            $profile['textBody'] = '';
         }
         $singleSendMailRequest = new SingleSendMailRequest($profile);
         $this->client->singleSendMail($singleSendMailRequest);
